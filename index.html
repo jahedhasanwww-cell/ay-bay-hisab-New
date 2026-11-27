@@ -11,13 +11,16 @@
   <link id="apple-touch-icon-link" rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23059669'/%3E%3Ctext x='90' y='118' font-size='90' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23059669'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E" />
   <title>আয়-ব্যয়ের হিসাব</title>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script>
     tailwind.config = {
       darkMode: 'class'
     };
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -147,11 +150,21 @@
       background-attachment: fixed;
     }
     html.darkglass .glass-card {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.14) 0%, rgba(15, 23, 42, 0.44) 100%) !important;
-      backdrop-filter: blur(26px) saturate(215%) !important;
-      -webkit-backdrop-filter: blur(26px) saturate(215%) !important;
-      border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.46), inset 0 1.5px 0 rgba(255, 255, 255, 0.34), inset 0 0 24px rgba(255, 255, 255, 0.08) !important;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.78) 0%, rgba(15, 23, 42, 0.68) 100%) !important;
+      backdrop-filter: blur(26px) saturate(200%) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(200%) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.26) !important;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.3), inset 0 0 22px rgba(255, 255, 255, 0.06) !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+    .card-reveal {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.32s ease-out, transform 0.32s ease-out;
+    }
+    .card-reveal.card-visible {
+      opacity: 1;
+      transform: translateY(0);
     }
     html.darkglass .hero-gradient {
       background: linear-gradient(135deg, color-mix(in srgb, var(--hero-from) 72%, transparent), color-mix(in srgb, var(--hero-via) 64%, transparent), color-mix(in srgb, var(--hero-to) 76%, transparent)) !important;
@@ -170,6 +183,43 @@
     }
     .safe-bottom-nav {
       bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    section.hidden {
+      content-visibility: auto;
+    }
+    html.pin-prelocked #app-main-content,
+    html.pin-prelocked #app-bottom-nav {
+      display: none !important;
+    }
+    body.privacy-blurred #app-main-content,
+    body.privacy-blurred #app-bottom-nav {
+      filter: blur(18px);
+      opacity: 0.2;
+      pointer-events: none;
+      transition: filter 0.15s ease, opacity 0.15s ease;
+    }
+    .privacy-watermark {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-around;
+      justify-content: space-around;
+      gap: 4rem;
+      opacity: 0.035;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .privacy-watermark span {
+      transform: rotate(-28deg);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      color: currentColor;
     }
     @keyframes tabFadeIn {
       from { opacity: 0; transform: translateY(6px); }
@@ -408,9 +458,16 @@
         <p id="pin-unlock-error" class="hidden text-xs text-rose-600 dark:text-rose-400 font-medium" role="alert"></p>
         <button id="pin-unlock-btn" type="submit" class="hidden">আনলক করুন</button>
         <button
+          id="pin-biometric-unlock-btn"
+          type="button"
+          class="hidden mx-auto inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition cursor-pointer"
+        >
+          👆 ফিঙ্গারপ্রিন্ট / ফেস আনলক
+        </button>
+        <button
           id="forgot-pin-btn"
           type="button"
-          class="text-xs font-medium accent-text hover:underline cursor-pointer pt-1"
+          class="block mx-auto text-xs font-medium accent-text hover:underline cursor-pointer pt-1"
         >
           পিন ভুলে গেছেন?
         </button>
@@ -704,7 +761,24 @@
   </aside>
 
   <!-- ফুল-পেজ রেসপন্সিভ মেইন কন্টেইনার -->
-  <main class="w-full max-w-5xl mx-auto space-y-6">
+  <!-- হালকা প্রাইভেসি ওয়াটারমার্ক -->
+  <div class="privacy-watermark no-print" aria-hidden="true">
+    <span>Confidential • জাহিদ</span>
+    <span>Confidential • জাহিদ</span>
+    <span>Confidential • জাহিদ</span>
+    <span>Confidential • জাহিদ</span>
+    <span>Confidential • জাহিদ</span>
+    <span>Confidential • জাহিদ</span>
+  </div>
+
+  <script>
+    try {
+      if (localStorage.getItem('bn_expense_log_pin_v5')) {
+        document.documentElement.classList.add('pin-prelocked');
+      }
+    } catch (e) {}
+  </script>
+  <main id="app-main-content" class="relative z-10 w-full max-w-5xl mx-auto space-y-6">
 
     <!-- শীর্ষ অ্যাপ বার: বামে প্রোফাইল ছবি | মাঝে শিরোনাম | ডানে মেনু -->
     <div class="grid grid-cols-[auto_1fr_auto] items-center gap-3">
@@ -774,6 +848,15 @@
       >
         <span class="text-base shrink-0" aria-hidden="true">🔔</span>
         <span id="home-budget-warn-text" class="text-xs sm:text-sm font-semibold text-rose-900 dark:text-rose-200"></span>
+      </div>
+
+      <!-- ক্যাটাগরি বাজেট ৮০%+ সতর্কতা ব্যানার -->
+      <div
+        id="home-cat-budget-warn"
+        class="hidden no-print w-full rounded-2xl bg-amber-50/95 dark:bg-amber-950/70 border border-amber-300/80 dark:border-amber-800 px-4 py-2.5 shadow-sm space-y-1"
+      >
+        <p class="text-xs font-bold text-amber-900 dark:text-amber-200">📊 ক্যাটাগরি বাজেট সতর্কতা (৮০%+):</p>
+        <div id="home-cat-budget-warn-list" class="flex flex-wrap gap-1.5"></div>
       </div>
 
       <!-- হিরো ব্যালেন্স কার্ড (রঙিন গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড) -->
@@ -848,6 +931,26 @@
               <p id="hero-pay-label" class="text-[10px] font-medium text-white/75 truncate">দেনা</p>
               <p id="hero-pay-val" class="text-xs sm:text-sm font-bold text-rose-200 tabular-nums truncate">৳0.00</p>
             </button>
+          </div>
+
+          <!-- মাল্টিপল ওয়ালেট ব্যালেন্স বার (ক্যাশ, বিকাশ, নগদ, ব্যাংক) -->
+          <div id="hero-wallets-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 border-t border-white/15">
+            <div class="rounded-xl bg-black/15 px-2.5 py-1.5">
+              <p class="text-[10px] text-white/75 truncate">💵 ক্যাশ</p>
+              <p id="wallet-bal-cash" class="text-xs font-bold text-white tabular-nums truncate">৳0.00</p>
+            </div>
+            <div class="rounded-xl bg-black/15 px-2.5 py-1.5">
+              <p class="text-[10px] text-white/75 truncate">📱 বিকাশ</p>
+              <p id="wallet-bal-bkash" class="text-xs font-bold text-white tabular-nums truncate">৳0.00</p>
+            </div>
+            <div class="rounded-xl bg-black/15 px-2.5 py-1.5">
+              <p class="text-[10px] text-white/75 truncate">📲 নগদ</p>
+              <p id="wallet-bal-nagad" class="text-xs font-bold text-white tabular-nums truncate">৳0.00</p>
+            </div>
+            <div class="rounded-xl bg-black/15 px-2.5 py-1.5">
+              <p class="text-[10px] text-white/75 truncate">🏦 ব্যাংক</p>
+              <p id="wallet-bal-bank" class="text-xs font-bold text-white tabular-nums truncate">৳0.00</p>
+            </div>
           </div>
         </div>
       </header>
@@ -941,6 +1044,19 @@
           </form>
           <p id="budget-error" class="hidden text-xs text-rose-600 dark:text-rose-400" role="alert"></p>
         </div>
+      </div>
+
+      <!-- ড্যাশবোর্ড লাইভ রেট উইজেট (রিয়াল, ডলার, সোনা) -->
+      <div id="home-live-rates-widget" class="no-print bg-white/90 dark:bg-slate-900/90 glass-card rounded-2xl px-3.5 py-2.5 border border-white/80 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+          <span class="text-slate-400 dark:text-slate-500">📡 লাইভ:</span>
+          <span dir="ltr"><bdi>﷼</bdi>&nbsp;<strong id="widget-sar-val" class="accent-text">৳32.50</strong></span>
+          <span class="text-slate-300 dark:text-slate-700">|</span>
+          <span>$ <strong id="widget-usd-val" class="text-sky-600 dark:text-sky-400">—</strong></span>
+          <span class="text-slate-300 dark:text-slate-700">|</span>
+          <span>🪙 <strong id="widget-gold-val" class="text-amber-600 dark:text-amber-400">—</strong></span>
+        </div>
+        <button id="widget-rates-refresh-btn" type="button" class="px-2 py-1 rounded-lg accent-soft-bg text-[10px] font-bold cursor-pointer">🔄 আপডেট</button>
       </div>
 
       <!-- হোমপেজে নতুন আয় বা খরচ যোগ করুন -->
@@ -1101,6 +1217,51 @@
           <div id="custom-cat-manage-list" class="hidden flex flex-wrap gap-1.5 pt-1 border-t border-slate-200 dark:border-slate-700"></div>
         </div>
 
+        <!-- ওয়ালেট, রিসিট ছবি ও মাসিক রিকারিং অপশন -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label id="wallet-label" for="expense-wallet" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">ওয়ালেট / অ্যাকাউন্ট</label>
+            <select
+              id="expense-wallet"
+              class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+            >
+              <option value="ক্যাশ">💵 নগদ (ক্যাশ)</option>
+              <option value="বিকাশ">📱 বিকাশ</option>
+              <option value="নগদ">📲 নগদ (অ্যাপ)</option>
+              <option value="ব্যাংক">🏦 ব্যাংক</option>
+            </select>
+          </div>
+          <div>
+            <span id="receipt-label" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">রিসিট / মেমো ছবি (ঐচ্ছিক)</span>
+            <div class="flex items-center gap-2">
+              <button
+                id="receipt-upload-btn"
+                type="button"
+                class="flex-1 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition cursor-pointer truncate"
+              >
+                📷 রিসিট ছবি যুক্ত করুন
+              </button>
+              <input id="expense-receipt-input" type="file" accept="image/*" class="hidden" />
+              <div id="receipt-preview-wrap" class="hidden flex items-center gap-1.5 shrink-0">
+                <img id="receipt-preview-img" alt="রিসিট প্রিভিউ" class="w-9 h-9 rounded-lg object-cover border border-slate-300 dark:border-slate-600" />
+                <button id="receipt-ocr-btn" type="button" class="px-2 py-1 rounded-lg accent-bg text-white text-[10px] font-bold cursor-pointer whitespace-nowrap" title="ছবি থেকে টাকা ও তারিখ স্ক্যান করুন">✨ স্ক্যান</button>
+                <button id="receipt-clear-btn" type="button" class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-300 text-xs font-bold cursor-pointer" aria-label="ছবি মুছুন">×</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 cursor-pointer select-none">
+          <input id="expense-recurring-check" type="checkbox" class="w-4 h-4 rounded accent-emerald-600 cursor-pointer" />
+          <span id="expense-recurring-label" class="text-xs font-semibold text-slate-700 dark:text-slate-200">🔁 প্রতি মাসে এই তারিখে অটো যোগ হবে (রিকারিং বিল)</span>
+        </label>
+
+        <!-- সক্রিয় মাসিক রিকারিং বিলের তালিকা -->
+        <div id="recurring-rules-box" class="hidden p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 space-y-1.5">
+          <p id="recurring-rules-heading" class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">🔁 সক্রিয় মাসিক রিকারিং বিল</p>
+          <div id="recurring-rules-list" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
         <p id="form-error" class="hidden text-sm text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl px-3.5 py-2.5" role="alert"></p>
 
         <button
@@ -1131,7 +1292,14 @@
           </span>
           <h2 id="list-heading" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">আপনার লেনদেনের তালিকা</h2>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button
+            id="share-report-card-btn"
+            type="button"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl accent-soft-bg text-xs font-semibold transition cursor-pointer"
+          >
+            🖼️ রিপোর্ট কার্ড
+          </button>
           <button
             id="print-report-btn"
             type="button"
@@ -1209,10 +1377,20 @@
         <span id="filter-summary-total" class="font-semibold text-slate-900 dark:text-white tabular-nums"></span>
       </div>
 
+      <!-- ক্লাউড স্কেলেটন লোডার -->
+      <div id="cloud-loading-skeleton" class="hidden space-y-2.5 py-2" aria-hidden="true">
+        <div class="h-14 rounded-2xl bg-slate-200/70 dark:bg-slate-800/70 animate-pulse"></div>
+        <div class="h-14 rounded-2xl bg-slate-200/60 dark:bg-slate-800/60 animate-pulse"></div>
+        <div class="h-14 rounded-2xl bg-slate-200/50 dark:bg-slate-800/50 animate-pulse"></div>
+      </div>
+
       <!-- কোনো এন্ট্রি না থাকলে -->
       <div id="empty-state" class="text-center py-10 px-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
+        <svg class="w-12 h-12 mx-auto mb-2.5 text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+        </svg>
         <p id="empty-state-title" class="text-sm font-medium text-slate-600 dark:text-slate-300">এখনো কোনো আয় বা খরচ যোগ করা হয়নি</p>
-        <p id="empty-state-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-1">নিচের "যোগ" আইকনে ক্লিক করে আপনার প্রথম এন্ট্রি লিখুন।</p>
+        <p id="empty-state-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-1">উপরের "নতুন এন্ট্রি যোগ করুন" বাটনে ট্যাপ করে প্রথম এন্ট্রি লিখুন।</p>
       </div>
 
       <!-- ফিল্টার বা সার্চে কোনো ফলাফল না থাকলে -->
@@ -1590,11 +1768,38 @@
           </div>
 
           <div id="dues-empty-state" class="text-center py-8 px-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
+            <svg class="w-11 h-11 mx-auto mb-2 text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
             <p id="dues-empty-title" class="text-sm font-medium text-slate-600 dark:text-slate-300">কোনো ধার-দেনার হিসাব নেই</p>
             <p id="dues-empty-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-1">কেউ টাকা পাবে বা কারো কাছে পেলে উপরে লিখে রাখুন।</p>
           </div>
 
           <ul id="dues-list" class="divide-y divide-slate-100 dark:divide-slate-800 hidden"></ul>
+        </div>
+
+        <!-- ঋণ পরিশোধ পরিকল্পনা (Debt Payoff Planner) -->
+        <div class="no-print bg-white/95 dark:bg-slate-900/95 glass-card rounded-3xl shadow-md border border-white/80 dark:border-slate-800 p-5 sm:p-6">
+          <button id="toggle-debt-planner-btn" type="button" aria-expanded="false" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
+            <span class="text-sm font-bold text-slate-900 dark:text-white">📉 ঋণ পরিশোধ পরিকল্পনা (Debt Planner)</span>
+            <span id="debt-planner-arrow" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold shrink-0">▸</span>
+          </button>
+          <div id="debt-planner-body" class="hidden space-y-3 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label for="debt-monthly-budget-input" class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">মাসিক পরিশোধ বাজেট</label>
+                <input id="debt-monthly-budget-input" type="number" min="1" step="100" value="5000" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none" />
+              </div>
+              <div>
+                <label for="debt-strategy-select" class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">পরিকল্পনার পদ্ধতি</label>
+                <select id="debt-strategy-select" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                  <option value="snowball">❄️ Snowball (ছোট দেনা আগে শেষ করুন)</option>
+                  <option value="avalanche">⚡ Largest First (বড় দেনা আগে কমান)</option>
+                </select>
+              </div>
+            </div>
+            <div id="debt-planner-output" class="space-y-1.5 text-xs text-slate-700 dark:text-slate-200"></div>
+          </div>
         </div>
         </div>
 
@@ -2130,11 +2335,30 @@
         </div>
 
         <div id="savings-history-empty" class="text-center py-8 px-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
+          <svg class="w-11 h-11 mx-auto mb-2 text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           <p id="savings-empty-title" class="text-sm font-medium text-slate-600 dark:text-slate-300">এখনো কোনো সঞ্চয়ের হিস্টরি নেই</p>
           <p id="savings-empty-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-1">উপরের ফর্ম থেকে জমা বা উত্তোলন যোগ করলে তারিখ ও কারণসহ এখানে দেখা যাবে।</p>
         </div>
 
         <ul id="savings-history-list" class="divide-y divide-slate-100 dark:divide-slate-800 hidden"></ul>
+      </div>
+
+      <!-- ৩.৫. একাধিক সঞ্চয় লক্ষ্য (Goal-Based Sinking Funds) -->
+      <div class="no-print bg-white/95 dark:bg-slate-900/95 glass-card rounded-3xl shadow-md border border-white/80 dark:border-slate-800 p-5 sm:p-6">
+        <button id="toggle-sinking-funds-btn" type="button" aria-expanded="false" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
+          <span class="text-sm font-bold text-slate-900 dark:text-white">🏆 একাধিক সঞ্চয় লক্ষ্য (Sinking Funds)</span>
+          <span id="sinking-funds-arrow" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold shrink-0">▸</span>
+        </button>
+        <div id="sinking-funds-body" class="hidden space-y-3.5 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+          <form id="sinking-fund-form" class="grid grid-cols-1 sm:grid-cols-3 gap-2" novalidate>
+            <input id="sf-name-input" type="text" placeholder="লক্ষ্য (যেমন: নতুন ফোন)" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none" />
+            <input id="sf-target-input" type="number" min="1" step="100" placeholder="টাকার লক্ষ্য (যেমন: 50000)" class="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none" />
+            <button type="submit" class="px-3 py-2 rounded-xl accent-bg text-white text-xs font-bold cursor-pointer">+ লক্ষ্য যোগ</button>
+          </form>
+          <div id="sinking-funds-list" class="space-y-2.5"></div>
+        </div>
       </div>
 
       <!-- ৪. সঞ্চয় ট্যাবের নিচে খাত অনুযায়ী সঞ্চয়ের চার্ট -->
@@ -2170,6 +2394,31 @@
             </div>
           </div>
           <p id="assets-total-val" class="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">৳0.00</p>
+        </div>
+
+        <!-- ১.৫. লাইভ সোনা ও রুপার আন্তর্জাতিক রেট রেফারেন্স (প্রতি ভরি) -->
+        <div class="no-print bg-white/95 dark:bg-slate-900/95 glass-card rounded-2xl p-4 border border-white/80 dark:border-slate-800 shadow-sm space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">🪙 লাইভ সোনা ও রুপার রেট (প্রতি ভরি • ১১.৬৬৪ গ্রাম)</p>
+            <button
+              id="metals-refresh-btn"
+              type="button"
+              class="px-2.5 py-1 rounded-lg accent-soft-bg text-[11px] font-semibold transition cursor-pointer"
+            >
+              🔄 লাইভ রেট আনুন
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 px-3 py-2">
+              <p class="text-[10px] font-semibold text-amber-800 dark:text-amber-300">সোনা (২৪K স্পট / ভরি)</p>
+              <p id="gold-bhori-val" class="text-sm font-extrabold text-amber-700 dark:text-amber-300 tabular-nums mt-0.5">—</p>
+            </div>
+            <div class="rounded-xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/70 px-3 py-2">
+              <p class="text-[10px] font-semibold text-slate-600 dark:text-slate-300">রুপা (স্পট / ভরি)</p>
+              <p id="silver-bhori-val" class="text-sm font-extrabold text-slate-800 dark:text-slate-100 tabular-nums mt-0.5">—</p>
+            </div>
+          </div>
+          <p id="metals-status-note" class="text-[10px] text-slate-400 dark:text-slate-500">আন্তর্জাতিক স্পট রেট দেখতে "লাইভ রেট আনুন" বাটনে ট্যাপ করুন।</p>
         </div>
 
         <!-- ২. নতুন সম্পদ যোগ করার ফর্ম (কমপ্যাক্ট ও ট্যাপে খুলবে) -->
@@ -2274,6 +2523,9 @@
           </div>
 
           <div id="assets-empty-state" class="text-center py-8 px-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700">
+            <svg class="w-11 h-11 mx-auto mb-2 text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+            </svg>
             <p id="assets-empty-title" class="text-sm font-medium text-slate-600 dark:text-slate-300">এখনো কোনো সম্পদ যোগ করা হয়নি</p>
             <p id="assets-empty-sub" class="text-xs text-slate-400 dark:text-slate-500 mt-1">জমি, সোনা, বাড়ি বা অন্যান্য সম্পদের বর্তমান মূল্য উপরে যোগ করুন।</p>
           </div>
@@ -2351,6 +2603,13 @@
             <span id="currency-section-arrow" class="w-7 h-7 rounded-xl bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold shrink-0">▸</span>
           </button>
           <div id="tab-currency-list" class="hidden space-y-2 pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+            <div class="flex items-center justify-between gap-2 pb-1.5 mb-1 border-b border-slate-200/70 dark:border-slate-700/70">
+              <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">সবগুলো একসাথে নির্বাচন:</span>
+              <div class="inline-flex gap-1.5">
+                <button id="curr-select-all-bdt" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold cursor-pointer">সব ৳ টাকা</button>
+                <button id="curr-select-all-sar" type="button" class="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-[10px] font-bold cursor-pointer">সব ﷼ রিয়াল</button>
+              </div>
+            </div>
             <div class="flex items-center justify-between gap-2 rounded-xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 px-3 py-2">
               <span id="curr-row-home-label" class="text-xs font-semibold text-slate-700 dark:text-slate-200">আয়-ব্যয়ের হিসাব</span>
               <div class="inline-flex bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700" role="group">
@@ -2407,6 +2666,14 @@
               class="w-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-1 text-xs font-bold text-slate-900 dark:text-white text-center focus:outline-none tabular-nums"
             />
             <span class="font-semibold">৳</span>
+            <button
+              id="converter-live-rate-btn"
+              type="button"
+              class="ml-1 px-2 py-1 rounded-lg accent-soft-bg text-[10px] font-bold transition cursor-pointer"
+              title="লাইভ এক্সচেঞ্জ রেট আনুন"
+            >
+              🔄 লাইভ
+            </button>
           </div>
         </div>
 
@@ -2451,6 +2718,18 @@
             <span id="converter-total-label" class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">২.৫% বোনাসসহ মোট পাবেন</span>
             <span id="converter-total-val" class="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">৳0.00</span>
           </div>
+        </div>
+      </div>
+
+      <!-- ১.৮. ক্যাটাগরি অনুযায়ী মাসিক বাজেট লিমিট (ফোল্ডিং ট্যাব) -->
+      <div class="bg-white/95 dark:bg-slate-900/95 glass-card rounded-3xl shadow-md border border-white/80 dark:border-slate-800 p-5 sm:p-6">
+        <button id="toggle-catbudget-section-btn" type="button" aria-expanded="false" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
+          <span class="text-sm font-bold text-slate-900 dark:text-white">📊 ক্যাটাগরি বাজেট লিমিট (৮০% সতর্কতা)</span>
+          <span id="catbudget-section-arrow" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold shrink-0">▸</span>
+        </button>
+        <div id="catbudget-section-body" class="hidden space-y-3 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">যেকোনো খরচের খাতে মাসিক সীমা নির্ধারণ করুন। ৮০% ছাড়ালে হোমপেজে সতর্কবার্তা দেখাবে।</p>
+          <div id="cat-budget-rows" class="space-y-2"></div>
         </div>
       </div>
 
@@ -2532,6 +2811,27 @@
             </button>
           </div>
         </form>
+        <!-- বায়োমেট্রিক (WebAuthn) ও স্টিলথ প্রাইভেসি মোড -->
+        <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-xs font-bold text-slate-800 dark:text-slate-100">👆 ফিঙ্গারপ্রিন্ট / Face ID লক</p>
+              <p id="biometric-status-text" class="text-[10px] text-slate-400 dark:text-slate-500">পিনের পাশাপাশি বায়োমেট্রিক আনলক চালু করুন</p>
+            </div>
+            <button
+              id="biometric-toggle-btn"
+              type="button"
+              class="px-3 py-1.5 rounded-xl accent-soft-bg text-[11px] font-bold transition cursor-pointer shrink-0"
+            >
+              চালু করুন
+            </button>
+          </div>
+          <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/70 cursor-pointer select-none">
+            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">🕶️ ফোন ঝাঁকালে / মিনিমাইজে টাকা লুকান (Stealth)</span>
+            <input id="stealth-mode-check" type="checkbox" class="w-4 h-4 rounded accent-emerald-600 cursor-pointer shrink-0" />
+          </label>
+        </div>
+
         <p id="pin-setup-error" class="hidden text-xs text-rose-600 dark:text-rose-400" role="alert"></p>
         </div>
       </div>
@@ -2637,8 +2937,35 @@
 
   </main>
 
+  <!-- মাসিক ফিন্যান্স রিপোর্ট কার্ড শেয়ার মডাল -->
+  <div id="report-card-modal" class="hidden fixed inset-0 z-[76] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="মাসিক রিপোর্ট কার্ড">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <p class="text-sm font-bold text-slate-800 dark:text-white">🖼️ মাসিক ফিন্যান্স রিপোর্ট কার্ড</p>
+        <button id="report-card-close-btn" type="button" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center text-base font-bold cursor-pointer" aria-label="বন্ধ করুন">×</button>
+      </div>
+      <canvas id="report-card-canvas" width="900" height="560" class="w-full h-auto rounded-2xl shadow-md"></canvas>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="report-card-share-btn" type="button" class="py-2.5 rounded-xl accent-bg text-white text-xs font-bold shadow-sm cursor-pointer">📤 শেয়ার করুন</button>
+        <button id="report-card-download-btn" type="button" class="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white text-xs font-bold cursor-pointer">⬇️ ছবি ডাউনলোড</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- রিসিট ছবি বড় করে দেখার মডাল -->
+  <div id="receipt-lightbox-modal" class="hidden fixed inset-0 z-[75] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="রিসিট ছবি">
+    <div class="relative max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-3 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+      <div class="flex items-center justify-between gap-2 px-1">
+        <p id="receipt-lightbox-title" class="text-xs font-bold text-slate-800 dark:text-white truncate">📷 রিসিট / মেমো</p>
+        <button id="receipt-lightbox-close" type="button" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center text-base font-bold cursor-pointer" aria-label="বন্ধ করুন">×</button>
+      </div>
+      <img id="receipt-lightbox-img" alt="রিসিট ছবি" class="w-full max-h-[70vh] object-contain rounded-2xl bg-slate-100 dark:bg-slate-800" />
+    </div>
+  </div>
+
   <!-- নিচের গ্লাস আইকন নেভিগেশন বার -->
   <nav
+    id="app-bottom-nav"
     class="fixed safe-bottom-nav inset-x-4 z-30 pointer-events-none"
     aria-label="প্রধান নেভিগেশন"
   >
@@ -2715,6 +3042,11 @@
     const STORAGE_LEDGER_ACCS_KEY = 'bn_expense_log_ledger_accs_v20';
     const STORAGE_LEDGER_TXS_KEY = 'bn_expense_log_ledger_txs_v20';
     const STORAGE_TAB_CURRENCIES_KEY = 'bn_expense_log_tab_currencies_v21';
+    const STORAGE_RECURRING_KEY = 'bn_expense_log_recurring_v22';
+    const STORAGE_CAT_BUDGETS_KEY = 'bn_expense_log_cat_budgets_v23';
+    const STORAGE_SINKING_FUNDS_KEY = 'bn_expense_log_sinking_funds_v24';
+    const STORAGE_BIOMETRIC_ID_KEY = 'bn_expense_log_biometric_id_v24';
+    const STORAGE_STEALTH_KEY = 'bn_expense_log_stealth_v24';
     const STORAGE_GUEST_KEY = 'bn_expense_log_guest_v14';
 
     // ব্যবহারকারীর Firebase কনফিগারেশন
@@ -2741,6 +3073,9 @@
         }
         fbAuth = firebase.auth();
         fbDb = firebase.firestore();
+        try {
+          fbDb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+        } catch (persistErr) {}
       }
     } catch (fbInitErr) {
       // অফলাইন বা প্রিভিউ মোডে লোকাল স্টোরেজ স্বাভাবিকভাবেই কাজ করবে
@@ -3016,6 +3351,10 @@
         duesNetBadgePos: 'আপনি পাবেন',
         duesNetBadgeNeg: 'আপনি দিবেন',
         duesNetBadgeZero: 'সমান',
+        savingsCardTotalLabel: 'মোট সঞ্চয় (জমা আছে)',
+        savingsCardDepLabel: 'মোট জমা (+)',
+        savingsCardWdLabel: 'উত্তোলন (−)',
+        backupCardHeading: '💾 ব্যাকআপ ও রিস্টোর (জিমেইল / ফাইল)',
         toastDuePayUpdated: 'পরিশোধের তথ্য আপডেট হয়েছে।',
         toastDuePayDeleted: 'পরিশোধের এন্ট্রি মুছে ফেলা হয়েছে।',
         duesPayableLabel: 'মোট দেনা (দিবো)',
@@ -3418,6 +3757,10 @@
         duesNetBadgePos: 'You will receive',
         duesNetBadgeNeg: 'You will pay',
         duesNetBadgeZero: 'Settled',
+        savingsCardTotalLabel: 'Total Savings',
+        savingsCardDepLabel: 'Deposited (+)',
+        savingsCardWdLabel: 'Withdrawn (−)',
+        backupCardHeading: '💾 Backup & Restore (Gmail / File)',
         toastDuePayUpdated: 'Payment entry updated.',
         toastDuePayDeleted: 'Payment entry deleted.',
         duesPayableLabel: 'To Pay',
@@ -3795,9 +4138,67 @@
     }
 
     // ২. ব্রাউজারের localStorage হেল্পার
+    const VAULT_PREFIX = 'vault:v1:';
+    const VAULT_SECRET = 'ayBayVault#2026$Jahid';
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/[&<>'"]/g, (tag) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag]));
+    }
+
+    function vaultEncode(str) {
+      try {
+        const bytes = new TextEncoder().encode(String(str || ''));
+        const keyBytes = new TextEncoder().encode(VAULT_SECRET);
+        const out = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) {
+          out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+        }
+        let bin = '';
+        for (let i = 0; i < out.length; i++) bin += String.fromCharCode(out[i]);
+        return VAULT_PREFIX + btoa(bin);
+      } catch (e) {
+        return String(str || '');
+      }
+    }
+
+    function vaultDecode(raw) {
+      if (!raw || typeof raw !== 'string') return raw;
+      if (!raw.startsWith(VAULT_PREFIX)) return raw; // পুরোনো প্লেইন JSON অটো সাপোর্ট
+      try {
+        const bin = atob(raw.slice(VAULT_PREFIX.length));
+        const keyBytes = new TextEncoder().encode(VAULT_SECRET);
+        const out = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) {
+          out[i] = bin.charCodeAt(i) ^ keyBytes[i % keyBytes.length];
+        }
+        return new TextDecoder().decode(out);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function vaultGetJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const decoded = vaultDecode(raw);
+        return decoded ? JSON.parse(decoded) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function vaultSetJSON(key, obj) {
+      try {
+        localStorage.setItem(key, vaultEncode(JSON.stringify(obj)));
+      } catch (e) {}
+    }
+
     function loadSavedData() {
       try {
-        const rawExpenses = localStorage.getItem(STORAGE_EXPENSES_KEY);
+        const rawExpenses = vaultDecode(localStorage.getItem(STORAGE_EXPENSES_KEY));
         const rawBudget = localStorage.getItem(STORAGE_BUDGET_KEY);
         const rawCurrency = localStorage.getItem(STORAGE_CURRENCY_KEY);
         const rawTheme = localStorage.getItem(STORAGE_THEME_KEY);
@@ -3808,9 +4209,9 @@
         const rawRecovery = localStorage.getItem(STORAGE_RECOVERY_KEY) || '';
         const rawCustomCats = localStorage.getItem(STORAGE_CUSTOM_CATS_KEY);
         const rawGoal = localStorage.getItem(STORAGE_GOAL_KEY);
-        const rawSavingsHist = localStorage.getItem(STORAGE_SAVINGS_HIST_KEY);
+        const rawSavingsHist = vaultDecode(localStorage.getItem(STORAGE_SAVINGS_HIST_KEY));
         const parsedSavingsHist = rawSavingsHist ? JSON.parse(rawSavingsHist) : [];
-        const rawDues = localStorage.getItem(STORAGE_DUES_KEY);
+        const rawDues = vaultDecode(localStorage.getItem(STORAGE_DUES_KEY));
         const parsedDues = rawDues ? JSON.parse(rawDues) : [];
         const rawDueProfiles = localStorage.getItem(STORAGE_DUE_PROFILES_KEY);
         const parsedDueProfiles = rawDueProfiles ? JSON.parse(rawDueProfiles) : null;
@@ -3818,11 +4219,11 @@
         const rawTemplates = localStorage.getItem(STORAGE_TEMPLATES_KEY);
         const parsedTemplates = rawTemplates ? JSON.parse(rawTemplates) : [];
         const rawRate = parseFloat(localStorage.getItem(STORAGE_RATE_KEY) || '');
-        const rawAssets = localStorage.getItem(STORAGE_ASSETS_KEY);
+        const rawAssets = vaultDecode(localStorage.getItem(STORAGE_ASSETS_KEY));
         const parsedAssets = rawAssets ? JSON.parse(rawAssets) : [];
-        const rawLedgerAccs = localStorage.getItem(STORAGE_LEDGER_ACCS_KEY);
+        const rawLedgerAccs = vaultDecode(localStorage.getItem(STORAGE_LEDGER_ACCS_KEY));
         const parsedLedgerAccs = rawLedgerAccs ? JSON.parse(rawLedgerAccs) : [];
-        const rawLedgerTxs = localStorage.getItem(STORAGE_LEDGER_TXS_KEY);
+        const rawLedgerTxs = vaultDecode(localStorage.getItem(STORAGE_LEDGER_TXS_KEY));
         const parsedLedgerTxs = rawLedgerTxs ? JSON.parse(rawLedgerTxs) : [];
         const rawTabCurrs = localStorage.getItem(STORAGE_TAB_CURRENCIES_KEY);
         const parsedTabCurrs = rawTabCurrs ? JSON.parse(rawTabCurrs) : null;
@@ -3884,7 +4285,7 @@
 
     function saveData() {
       try {
-        localStorage.setItem(STORAGE_EXPENSES_KEY, JSON.stringify(expenses));
+        vaultSetJSON(STORAGE_EXPENSES_KEY, expenses);
         localStorage.setItem(STORAGE_BUDGET_KEY, String(monthlyBudget));
         localStorage.setItem(STORAGE_CURRENCY_KEY, activeCurrency);
         localStorage.setItem(STORAGE_THEME_KEY, activeTheme);
@@ -3898,16 +4299,19 @@
         localStorage.setItem(STORAGE_CUSTOM_CATS_KEY, JSON.stringify(customCategories));
         if (savingsGoal) localStorage.setItem(STORAGE_GOAL_KEY, JSON.stringify(savingsGoal));
         else localStorage.removeItem(STORAGE_GOAL_KEY);
-        localStorage.setItem(STORAGE_SAVINGS_HIST_KEY, JSON.stringify(savingsHistory));
-        localStorage.setItem(STORAGE_DUES_KEY, JSON.stringify(dues));
+        vaultSetJSON(STORAGE_SAVINGS_HIST_KEY, savingsHistory);
+        vaultSetJSON(STORAGE_DUES_KEY, dues);
         localStorage.setItem(STORAGE_DUE_PROFILES_KEY, JSON.stringify(dueProfiles));
         localStorage.setItem(STORAGE_ACTIVE_DUE_PROFILE_KEY, activeDueProfileId);
         localStorage.setItem(STORAGE_TEMPLATES_KEY, JSON.stringify(quickTemplates));
         localStorage.setItem(STORAGE_RATE_KEY, String(sarToBdtRate));
-        localStorage.setItem(STORAGE_ASSETS_KEY, JSON.stringify(assets));
-        localStorage.setItem(STORAGE_LEDGER_ACCS_KEY, JSON.stringify(ledgerAccounts));
-        localStorage.setItem(STORAGE_LEDGER_TXS_KEY, JSON.stringify(ledgerTransactions));
+        vaultSetJSON(STORAGE_ASSETS_KEY, assets);
+        vaultSetJSON(STORAGE_LEDGER_ACCS_KEY, ledgerAccounts);
+        vaultSetJSON(STORAGE_LEDGER_TXS_KEY, ledgerTransactions);
         localStorage.setItem(STORAGE_TAB_CURRENCIES_KEY, JSON.stringify(tabCurrencies));
+        localStorage.setItem(STORAGE_RECURRING_KEY, JSON.stringify(recurringRules));
+        localStorage.setItem(STORAGE_CAT_BUDGETS_KEY, JSON.stringify(categoryBudgets));
+        localStorage.setItem(STORAGE_SINKING_FUNDS_KEY, JSON.stringify(sinkingFunds));
       } catch (err) {
         // ব্রাউজার স্টোরেজ ব্লক থাকলে ইন-মেমরি স্টেট কাজ করবে
       }
@@ -3925,6 +4329,70 @@
     let activeColor = initialData.color;
     let profileAvatar = initialData.avatar || '';
     let appPin = initialData.pin || '';
+    let recurringRules = (() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_RECURRING_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) { return []; }
+    })();
+    let pendingReceiptDataUrl = '';
+    let categoryBudgets = (() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_CAT_BUDGETS_KEY);
+        const obj = raw ? JSON.parse(raw) : {};
+        return (obj && typeof obj === 'object') ? obj : {};
+      } catch (e) { return {}; }
+    })();
+    let sinkingFunds = (() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_SINKING_FUNDS_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) { return []; }
+    })();
+    let biometricCredId = (() => { try { return localStorage.getItem(STORAGE_BIOMETRIC_ID_KEY) || ''; } catch (e) { return ''; } })();
+    let stealthModeEnabled = (() => { try { return localStorage.getItem(STORAGE_STEALTH_KEY) === '1'; } catch (e) { return false; } })();
+
+    function triggerHaptic(pattern) {
+      try {
+        if (navigator && typeof navigator.vibrate === 'function') {
+          navigator.vibrate(pattern || 25);
+        }
+      } catch (e) {}
+    }
+
+    async function hashPin(pin, legacyUnsalted) {
+      const str = String(pin || '');
+      const payload = legacyUnsalted ? str : ('ay_bay_vault_salt_v2:' + str);
+      try {
+        if (window.crypto && window.crypto.subtle) {
+          const buf = new TextEncoder().encode(payload);
+          const digest = await window.crypto.subtle.digest('SHA-256', buf);
+          const hex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+          return (legacyUnsalted ? 'sha256:' : 'sha256s:') + hex;
+        }
+      } catch (e) {}
+      return str;
+    }
+
+    function setVaultContentHidden(isLocked) {
+      if (!isLocked) document.documentElement.classList.remove('pin-prelocked');
+      const mainEl = document.getElementById('app-main-content');
+      const navEl = document.getElementById('app-bottom-nav');
+      if (mainEl) mainEl.style.display = isLocked ? 'none' : '';
+      if (navEl) navEl.style.display = isLocked ? 'none' : '';
+    }
+
+    // পুরোনো ৪-ডিজিট প্লেইন পিন থাকলে অটো SHA-256 হ্যাশে রূপান্তর
+    if (appPin && /^\d{4}$/.test(appPin)) {
+      hashPin(appPin).then((hashed) => {
+        if (hashed && hashed !== appPin) {
+          appPin = hashed;
+          try { localStorage.setItem(STORAGE_PIN_KEY, appPin); } catch (e) {}
+        }
+      });
+    }
     let appRecovery = initialData.recovery || '';
     let suppressAutoLock = false;
     let autoLockDelaySec = (() => { try { const v = parseInt(localStorage.getItem(STORAGE_AUTOLOCK_KEY) || '0', 10); return [0, 60, 300].includes(v) ? v : 0; } catch (e) { return 0; } })();
@@ -4998,6 +5466,14 @@
 
       duesReceivableLabelEl.textContent = t('duesReceivableLabel');
       if (duesNetLabelEl) duesNetLabelEl.textContent = t('duesNetLabel');
+      const savCardTotLbl = document.getElementById('savings-card-total-label');
+      const savCardDepLbl = document.getElementById('savings-card-dep-label');
+      const savCardWdLbl = document.getElementById('savings-card-wd-label');
+      const bkpCardHdr = document.getElementById('backup-card-heading');
+      if (savCardTotLbl) savCardTotLbl.textContent = t('savingsCardTotalLabel');
+      if (savCardDepLbl) savCardDepLbl.textContent = t('savingsCardDepLabel');
+      if (savCardWdLbl) savCardWdLbl.textContent = t('savingsCardWdLabel');
+      if (bkpCardHdr) bkpCardHdr.textContent = t('backupCardHeading');
       duesPayableLabelEl.textContent = t('duesPayableLabel');
       dueProfilesHeadingEl.textContent = t('dueProfilesHeading');
       dueProfileAddToggleBtn.textContent = t('dueProfileAddBtn');
@@ -5288,14 +5764,25 @@
       });
     }
 
-    function attemptPinUnlock() {
+    async function attemptPinUnlock() {
       if (pinUnlockInput.value.length < 4) return;
-      if (pinUnlockInput.value.trim() === appPin) {
+      const entered = pinUnlockInput.value.trim();
+      const saltedHash = await hashPin(entered, false);
+      const legacyHash = await hashPin(entered, true);
+      if (entered === appPin || saltedHash === appPin || legacyHash === appPin) {
+        if (appPin !== saltedHash && saltedHash.startsWith('sha256s:')) {
+          appPin = saltedHash;
+          try { localStorage.setItem(STORAGE_PIN_KEY, appPin); } catch (e) {}
+        }
+        triggerHaptic(25);
+        setVaultContentHidden(false);
         pinUnlockErrorEl.classList.add('hidden');
         pinLockScreenEl.classList.add('hidden');
         pinUnlockInput.value = '';
         updatePinDots();
+        resetIdleLockTimer();
       } else {
+        triggerHaptic([45, 35, 45]);
         pinUnlockErrorEl.textContent = t('pinErrWrong');
         pinUnlockErrorEl.classList.remove('hidden');
         setTimeout(() => {
@@ -5308,6 +5795,7 @@
     function showLockScreen() {
       if (!appPin) return;
       closeMenu();
+      setVaultContentHidden(true);
       pinUnlockInput.value = '';
       updatePinDots();
       pinUnlockErrorEl.classList.add('hidden');
@@ -7525,6 +8013,14 @@
       const totalIncome = incomeItems.reduce((sum, item) => sum + item.amount, 0);
       const totalSpent = expenseItems.reduce((sum, item) => sum + item.amount, 0);
       const netBalance = totalIncome - totalSpent;
+      renderWalletBalances(monthEntries);
+      renderRecurringRulesList();
+      renderCategoryBudgetsUI();
+      renderCategoryBudgetWarnings();
+      renderSinkingFunds();
+      renderDebtPlanner();
+      const wSar = document.getElementById('widget-sar-val');
+      if (wSar) wSar.textContent = '৳' + Number(sarToBdtRate || 32.5).toFixed(2);
 
       netBalanceEl.textContent = formatMainTotal(netBalance, 'home');
       netBalanceEl.className = netBalance < 0
@@ -7664,16 +8160,37 @@
         const leftGroup = document.createElement('div');
         leftGroup.className = 'min-w-0 flex-1';
 
+        const nameRow = document.createElement('div');
+        nameRow.className = 'flex items-center gap-1.5 min-w-0';
         const nameSpan = document.createElement('p');
         nameSpan.className = 'text-sm font-semibold text-slate-800 dark:text-slate-100 truncate';
         nameSpan.textContent = entry.name;
+        nameRow.appendChild(nameSpan);
+        if (entry.receiptImg) {
+          const camIconBtn = document.createElement('span');
+          camIconBtn.role = 'button';
+          camIconBtn.tabIndex = 0;
+          camIconBtn.className = 'inline-flex items-center justify-center px-1.5 py-0.5 rounded-md accent-soft-bg text-[11px] shrink-0 cursor-pointer';
+          camIconBtn.title = 'রিসিট দেখুন';
+          camIconBtn.textContent = '📷';
+          camIconBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const lbModal = document.getElementById('receipt-lightbox-modal');
+            const lbImg = document.getElementById('receipt-lightbox-img');
+            const lbTitle = document.getElementById('receipt-lightbox-title');
+            if (lbImg) lbImg.src = entry.receiptImg;
+            if (lbTitle) lbTitle.textContent = '📷 ' + entry.name + ' (' + formatCurrency(entry.amount) + ')';
+            if (lbModal) lbModal.classList.remove('hidden');
+          });
+          nameRow.appendChild(camIconBtn);
+        }
 
         const badge = document.createElement('span');
         const badgeStyle = CATEGORY_STYLES[entry.category] || CATEGORY_STYLES['অন্যান্য'];
         badge.className = 'inline-block mt-0.5 px-2 py-0.5 text-[10px] font-medium rounded-full border ' + badgeStyle;
         badge.textContent = (isIncome ? t('incomeBadgePrefix') : '') + tCategory(entry.category);
 
-        leftGroup.appendChild(nameSpan);
+        leftGroup.appendChild(nameRow);
         leftGroup.appendChild(badge);
 
         const rightGroup = document.createElement('div');
@@ -7724,6 +8241,26 @@
             dateSpan.textContent = '📅 ' + entry.date;
             dateWrap.appendChild(dateSpan);
           }
+          const walletTag = document.createElement('span');
+          walletTag.className = 'inline-block px-1.5 py-0.5 text-[10px] font-semibold rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+          walletTag.textContent = '💼 ' + (entry.wallet || 'ক্যাশ');
+          dateWrap.appendChild(walletTag);
+
+          if (entry.receiptImg) {
+            const viewRecBtn = document.createElement('button');
+            viewRecBtn.type = 'button';
+            viewRecBtn.className = 'px-2 py-0.5 rounded-md accent-soft-bg text-[10px] font-bold cursor-pointer';
+            viewRecBtn.textContent = '📷 রিসিট দেখুন';
+            viewRecBtn.addEventListener('click', () => {
+              const lbModal = document.getElementById('receipt-lightbox-modal');
+              const lbImg = document.getElementById('receipt-lightbox-img');
+              const lbTitle = document.getElementById('receipt-lightbox-title');
+              if (lbImg) lbImg.src = entry.receiptImg;
+              if (lbTitle) lbTitle.textContent = '📷 ' + entry.name + ' (' + formatCurrency(entry.amount) + ')';
+              if (lbModal) lbModal.classList.remove('hidden');
+            });
+            dateWrap.appendChild(viewRecBtn);
+          }
 
           const btns = document.createElement('div');
           btns.className = 'flex items-center gap-1.5';
@@ -7761,23 +8298,159 @@
           li.appendChild(panel);
         }
 
+        // সোয়াইপ গেসচার: ডানে সোয়াইপ = এডিট, বামে সোয়াইপ = ডিলিট
+        let swipeStartX = 0;
+        let swipeDeltaX = 0;
+        li.addEventListener('touchstart', (ev) => {
+          if (ev.touches && ev.touches[0]) {
+            swipeStartX = ev.touches[0].clientX;
+            swipeDeltaX = 0;
+          }
+        }, { passive: true });
+        li.addEventListener('touchmove', (ev) => {
+          if (!swipeStartX || !ev.touches || !ev.touches[0]) return;
+          swipeDeltaX = ev.touches[0].clientX - swipeStartX;
+          if (Math.abs(swipeDeltaX) > 18) {
+            li.style.transform = 'translateX(' + Math.max(-75, Math.min(75, swipeDeltaX * 0.6)) + 'px)';
+          }
+        }, { passive: true });
+        li.addEventListener('touchend', () => {
+          li.style.transform = '';
+          if (swipeDeltaX > 75) {
+            triggerHaptic(22);
+            editingId = entry.id;
+            render();
+          } else if (swipeDeltaX < -75) {
+            triggerHaptic(28);
+            askConfirm({
+              title: t('confirmDeleteTitle'),
+              message: t('confirmDelEntryMsg') + ' ("' + entry.name + '" • ' + formatCurrency(entry.amount) + ')',
+              confirmText: t('confirmYesDelete'),
+              isDanger: true,
+              onConfirm: () => {
+                expandedExpenseIds.delete(entry.id);
+                removeExpense(entry.id);
+              }
+            });
+          }
+          swipeStartX = 0;
+          swipeDeltaX = 0;
+        });
+
         expenseListEl.appendChild(li);
       });
     }
 
     // ৬. অ্যাকশন ফাংশন
-    function addEntry(name, amount, category, type, date) {
+    function addEntry(name, amount, category, type, date, wallet, receiptImg) {
       expenses.unshift({
         id: nextId++,
         name: name,
         amount: amount,
         category: category,
         type: type,
-        date: date || getTodayDateString()
+        date: date || getTodayDateString(),
+        wallet: wallet || 'ক্যাশ',
+        receiptImg: receiptImg || ''
       });
+      triggerHaptic(28);
       saveData();
       render();
-      showToast(t('toastAdded'));
+      if (type !== 'income' && monthlyBudget > 0) {
+        const curYm = String(date || getTodayDateString()).slice(0, 7);
+        const monthSpent = expenses
+          .filter((i) => i.type !== 'income' && String(i.date || '').slice(0, 7) === curYm)
+          .reduce((s, i) => s + Number(i.amount || 0), 0);
+        if (monthSpent >= monthlyBudget) {
+          triggerHaptic([50, 40, 50]);
+          showToast('🚨 সতর্কতা: আপনার মাসিক বাজেট ১০০% ছাড়িয়ে গেছে!');
+        } else if (monthSpent >= monthlyBudget * 0.9) {
+          triggerHaptic([40, 30, 40]);
+          showToast('⚠️ সতর্কতা: আপনার মাসিক বাজেটের ৯০% শেষ হয়ে গেছে!');
+        } else {
+          showToast(t('toastAdded'));
+        }
+      } else {
+        showToast(t('toastAdded'));
+      }
+    }
+
+    function renderWalletBalances(entries) {
+      const totals = { 'ক্যাশ': 0, 'বিকাশ': 0, 'নগদ': 0, 'ব্যাংক': 0 };
+      entries.forEach((item) => {
+        const w = totals.hasOwnProperty(item.wallet) ? item.wallet : 'ক্যাশ';
+        const delta = item.type === 'income' ? Number(item.amount || 0) : -Number(item.amount || 0);
+        totals[w] = Number((totals[w] + delta).toFixed(2));
+      });
+      const mapIds = { 'ক্যাশ': 'wallet-bal-cash', 'বিকাশ': 'wallet-bal-bkash', 'নগদ': 'wallet-bal-nagad', 'ব্যাংক': 'wallet-bal-bank' };
+      Object.keys(mapIds).forEach((k) => {
+        const el = document.getElementById(mapIds[k]);
+        if (el) el.textContent = formatCurrency(totals[k], 'home');
+      });
+    }
+
+    function renderRecurringRulesList() {
+      const box = document.getElementById('recurring-rules-box');
+      const list = document.getElementById('recurring-rules-list');
+      if (!box || !list) return;
+      if (!recurringRules.length) {
+        box.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+      box.classList.remove('hidden');
+      list.innerHTML = '';
+      recurringRules.forEach((rule) => {
+        const pill = document.createElement('span');
+        pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-slate-700 dark:text-slate-200';
+        const txt = document.createElement('span');
+        txt.textContent = rule.name + ' • ' + formatCurrency(rule.amount, 'home') + ' (' + rule.dayOfMonth + ' তারিখ)';
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'text-rose-500 hover:text-rose-700 font-bold cursor-pointer';
+        rm.textContent = '×';
+        rm.setAttribute('aria-label', rule.name + ' রিকারিং মুছুন');
+        rm.addEventListener('click', () => {
+          recurringRules = recurringRules.filter((r) => r.id !== rule.id);
+          saveData();
+          renderRecurringRulesList();
+          showToast(t('toastDeleted'));
+        });
+        pill.appendChild(txt);
+        pill.appendChild(rm);
+        list.appendChild(pill);
+      });
+    }
+
+    function processRecurringTransactions() {
+      if (!recurringRules.length) return;
+      const now = new Date();
+      const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      const todayDay = now.getDate();
+      const todayStr = getTodayDateString();
+      let addedCount = 0;
+      recurringRules = recurringRules.map((rule) => {
+        if (rule.lastAddedMonth !== ym && todayDay >= Number(rule.dayOfMonth || 1)) {
+          expenses.unshift({
+            id: nextId++,
+            name: rule.name + ' (মাসিক)',
+            amount: Number(rule.amount),
+            category: rule.category || 'বিল',
+            type: rule.type === 'income' ? 'income' : 'expense',
+            date: todayStr,
+            wallet: rule.wallet || 'ক্যাশ',
+            receiptImg: ''
+          });
+          addedCount += 1;
+          return { ...rule, lastAddedMonth: ym };
+        }
+        return rule;
+      });
+      if (addedCount > 0) {
+        saveData();
+        render();
+        showToast('🔁 ' + addedCount + 'টি মাসিক রিকারিং বিল অটো যোগ হয়েছে!');
+      }
     }
 
     function updateExpense(id, name, amount, category, date) {
@@ -7856,7 +8529,10 @@
         assets: assets,
         ledgerAccounts: ledgerAccounts,
         ledgerTransactions: ledgerTransactions,
-        tabCurrencies: tabCurrencies
+        tabCurrencies: tabCurrencies,
+        recurringRules: recurringRules,
+        categoryBudgets: categoryBudgets,
+        sinkingFunds: sinkingFunds
       };
     }
 
@@ -7977,6 +8653,15 @@
       if (Array.isArray(parsed.ledgerTransactions)) {
         ledgerTransactions = parsed.ledgerTransactions.filter((tx) => tx && tx.accountId && Number(tx.amount) > 0);
         nextLedgerTxId = ledgerTransactions.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+      }
+      if (Array.isArray(parsed.recurringRules)) {
+        recurringRules = parsed.recurringRules.filter((r) => r && r.name && Number(r.amount) > 0);
+      }
+      if (parsed.categoryBudgets && typeof parsed.categoryBudgets === 'object') {
+        categoryBudgets = { ...parsed.categoryBudgets };
+      }
+      if (Array.isArray(parsed.sinkingFunds)) {
+        sinkingFunds = parsed.sinkingFunds.filter((g) => g && g.name && Number(g.target) > 0);
       }
       if (parsed.tabCurrencies && typeof parsed.tabCurrencies === 'object') {
         ['home', 'dues', 'ledger', 'savings', 'assets'].forEach((k) => {
@@ -8855,10 +9540,41 @@
         confirmText: t('confirmYesAdd'),
         isDanger: false,
         onConfirm: () => {
-          addEntry(name, amount, category, formType, date);
+          const walletEl = document.getElementById('expense-wallet');
+          const recChk = document.getElementById('expense-recurring-check');
+          const chosenWallet = walletEl ? walletEl.value : 'ক্যাশ';
+          const isRecurring = Boolean(recChk && recChk.checked);
+          const chosenReceipt = pendingReceiptDataUrl || '';
+
+          if (isRecurring) {
+            const dParts = String(date || getTodayDateString()).split('-');
+            const dayNum = Math.min(28, Math.max(1, parseInt(dParts[2] || '1', 10) || 1));
+            const ym = (dParts[0] && dParts[1]) ? (dParts[0] + '-' + dParts[1]) : getTodayDateString().slice(0, 7);
+            recurringRules.push({
+              id: Date.now(),
+              name: name,
+              amount: amount,
+              category: category,
+              type: formType,
+              wallet: chosenWallet,
+              dayOfMonth: dayNum,
+              lastAddedMonth: ym
+            });
+          }
+
+          addEntry(name, amount, category, formType, date, chosenWallet, chosenReceipt);
+          pendingReceiptDataUrl = '';
+          const rPrevWrap = document.getElementById('receipt-preview-wrap');
+          const rPrevImg = document.getElementById('receipt-preview-img');
+          const rFileIn = document.getElementById('expense-receipt-input');
+          if (rPrevWrap) rPrevWrap.classList.add('hidden');
+          if (rPrevImg) rPrevImg.src = '';
+          if (rFileIn) rFileIn.value = '';
+
           form.reset();
           syncFormTypeUI(false);
           categoryInput.value = category;
+          if (walletEl) walletEl.value = chosenWallet;
           dateInput.value = date;
           nameInput.focus();
         }
@@ -9253,13 +9969,16 @@
         pinRecoveryInput.focus();
         return;
       }
-      appPin = val;
-      appRecovery = rec.toLowerCase();
-      pinSetupErrorEl.classList.add('hidden');
-      pinSetupForm.classList.add('hidden');
-      saveData();
-      renderPinControls();
-      showToast(t('toastPinSet'));
+      hashPin(val).then((hashed) => {
+        appPin = hashed;
+        appRecovery = rec.toLowerCase();
+        pinSetupErrorEl.classList.add('hidden');
+        pinSetupForm.classList.add('hidden');
+        saveData();
+        renderPinControls();
+        triggerHaptic(30);
+        showToast(t('toastPinSet'));
+      });
     });
 
     pinLockNowBtn.addEventListener('click', showLockScreen);
@@ -9314,18 +10033,24 @@
         return;
       }
 
-      appPin = newPin;
-      if (!appRecovery && ans) appRecovery = ans;
-      saveData();
-      pinResetForm.classList.add('hidden');
-      pinUnlockForm.classList.remove('hidden');
-      pinLockScreenEl.classList.add('hidden');
-      showToast(t('toastPinResetDone'));
+      hashPin(newPin).then((hashed) => {
+        appPin = hashed;
+        if (!appRecovery && ans) appRecovery = ans;
+        saveData();
+        pinResetForm.classList.add('hidden');
+        pinUnlockForm.classList.remove('hidden');
+        setVaultContentHidden(false);
+        pinLockScreenEl.classList.add('hidden');
+        triggerHaptic(30);
+        resetIdleLockTimer();
+        showToast(t('toastPinResetDone'));
+      });
     });
 
     pinKeyBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         if (pinUnlockInput.value.length >= 4) return;
+        triggerHaptic(18);
         pinUnlockErrorEl.classList.add('hidden');
         pinUnlockInput.value += btn.dataset.pinDigit;
         updatePinDots();
@@ -9613,8 +10338,30 @@
     });
 
     // অ্যাপ থেকে বের হলে বা অন্য ট্যাবে গেলে নির্ধারিত সময় অনুযায়ী স্বয়ংক্রিয়ভাবে লক হওয়া
+    // আইডল সেশন টাইমআউট অটো-লক (২ মিনিট নিষ্ক্রিয় থাকলে অটো-লক)
+    let idleLockTimer = null;
+    function resetIdleLockTimer() {
+      if (idleLockTimer) clearTimeout(idleLockTimer);
+      if (!appPin) return;
+      const idleMs = Math.max(120, autoLockDelaySec || 120) * 1000;
+      idleLockTimer = setTimeout(() => {
+        if (appPin && pinLockScreenEl.classList.contains('hidden')) {
+          showLockScreen();
+        }
+      }, idleMs);
+    }
+    ['pointerdown', 'keydown', 'touchstart'].forEach((evt) => {
+      document.addEventListener(evt, resetIdleLockTimer, { passive: true });
+    });
+
+    // অ্যাপ ব্যাকগ্রাউন্ডে গেলে স্ক্রিন ব্লার (App Switch Privacy) ও অটো-লক
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        document.body.classList.add('privacy-blurred');
+        if (stealthModeEnabled && !hideBalances) {
+          hideBalances = true;
+          render();
+        }
         if (appPin && !suppressAutoLock) {
           if (autoLockDelaySec === 0) {
             showLockScreen();
@@ -9623,6 +10370,7 @@
           }
         }
       } else {
+        document.body.classList.remove('privacy-blurred');
         if (suppressAutoLock) {
           lastHiddenAt = 0;
           setTimeout(() => { suppressAutoLock = false; }, 1000);
@@ -9635,6 +10383,7 @@
             showLockScreen();
           }
         }
+        resetIdleLockTimer();
       }
     });
 
@@ -9722,8 +10471,11 @@
         cloudUnsubscribe();
         cloudUnsubscribe = null;
       }
+      const skel = document.getElementById('cloud-loading-skeleton');
+      if (skel && expenses.length === 0) skel.classList.remove('hidden');
       const docRef = fbDb.collection('users').doc(user.uid);
       cloudUnsubscribe = docRef.onSnapshot((snap) => {
+        if (skel) skel.classList.add('hidden');
         if (!snap.exists) {
           // প্রথমবার লগইন করলে লোকাল ডেটা থাকলে ক্লাউডে পাঠিয়ে দেওয়া
           pushStateToCloudNow();
@@ -9782,6 +10534,15 @@
             ledgerTransactions = data.ledgerTransactions;
             nextLedgerTxId = ledgerTransactions.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
           }
+          if (Array.isArray(data.recurringRules)) {
+            recurringRules = data.recurringRules.filter((r) => r && r.name && Number(r.amount) > 0);
+          }
+          if (data.categoryBudgets && typeof data.categoryBudgets === 'object') {
+            categoryBudgets = { ...data.categoryBudgets };
+          }
+          if (Array.isArray(data.sinkingFunds)) {
+            sinkingFunds = data.sinkingFunds.filter((g) => g && g.name && Number(g.target) > 0);
+          }
           if (data.tabCurrencies && typeof data.tabCurrencies === 'object') {
             ['home', 'dues', 'ledger', 'savings', 'assets'].forEach((k) => {
               if (CURRENCIES[data.tabCurrencies[k]]) tabCurrencies[k] = data.tabCurrencies[k];
@@ -9815,6 +10576,9 @@
             localStorage.setItem(STORAGE_LEDGER_ACCS_KEY, JSON.stringify(ledgerAccounts));
             localStorage.setItem(STORAGE_LEDGER_TXS_KEY, JSON.stringify(ledgerTransactions));
             localStorage.setItem(STORAGE_TAB_CURRENCIES_KEY, JSON.stringify(tabCurrencies));
+            localStorage.setItem(STORAGE_RECURRING_KEY, JSON.stringify(recurringRules));
+            localStorage.setItem(STORAGE_CAT_BUDGETS_KEY, JSON.stringify(categoryBudgets));
+            localStorage.setItem(STORAGE_SINKING_FUNDS_KEY, JSON.stringify(sinkingFunds));
             if (profileAvatar) localStorage.setItem(STORAGE_AVATAR_KEY, profileAvatar);
           } catch (e) {}
           render();
@@ -9823,6 +10587,7 @@
           isApplyingRemoteSnapshot = false;
         }
       }, () => {
+        if (skel) skel.classList.add('hidden');
         setCloudBadge('offline');
       });
     }
@@ -10068,15 +10833,793 @@
     bindAccordion('toggle-pin-section-btn', 'pin-section-body', 'pin-section-arrow');
     bindAccordion('toggle-backup-section-btn', 'backup-section-body', 'backup-section-arrow');
 
+    // রিসিট ছবি আপলোড ও ক্লায়েন্ট-সাইড কমপ্রেশন
+    const receiptUploadBtn = document.getElementById('receipt-upload-btn');
+    const receiptFileInput = document.getElementById('expense-receipt-input');
+    const receiptPreviewWrap = document.getElementById('receipt-preview-wrap');
+    const receiptPreviewImg = document.getElementById('receipt-preview-img');
+    const receiptClearBtn = document.getElementById('receipt-clear-btn');
+    const receiptLightboxModal = document.getElementById('receipt-lightbox-modal');
+    const receiptLightboxClose = document.getElementById('receipt-lightbox-close');
+
+    if (receiptUploadBtn && receiptFileInput) {
+      receiptUploadBtn.addEventListener('click', () => receiptFileInput.click());
+      receiptFileInput.addEventListener('change', (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 720;
+            const scale = img.width > maxW ? (maxW / img.width) : 1;
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              pendingReceiptDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            } else {
+              pendingReceiptDataUrl = String(reader.result || '');
+            }
+            if (receiptPreviewImg) receiptPreviewImg.src = pendingReceiptDataUrl;
+            if (receiptPreviewWrap) receiptPreviewWrap.classList.remove('hidden');
+            triggerHaptic(20);
+          };
+          img.src = String(reader.result || '');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    if (receiptClearBtn) {
+      receiptClearBtn.addEventListener('click', () => {
+        pendingReceiptDataUrl = '';
+        if (receiptPreviewImg) receiptPreviewImg.src = '';
+        if (receiptPreviewWrap) receiptPreviewWrap.classList.add('hidden');
+        if (receiptFileInput) receiptFileInput.value = '';
+      });
+    }
+    if (receiptLightboxClose && receiptLightboxModal) {
+      receiptLightboxClose.addEventListener('click', () => receiptLightboxModal.classList.add('hidden'));
+      receiptLightboxModal.addEventListener('click', (ev) => {
+        if (ev.target === receiptLightboxModal) receiptLightboxModal.classList.add('hidden');
+      });
+    }
+
+    function renderCategoryBudgetsUI() {
+      const wrap = document.getElementById('cat-budget-rows');
+      if (!wrap) return;
+      const cats = [...EXPENSE_CATEGORIES, ...(Array.isArray(customCategories.expense) ? customCategories.expense : [])];
+      const uniqueCats = Array.from(new Set(cats));
+      wrap.innerHTML = '';
+      uniqueCats.forEach((cat) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 rounded-xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 px-3 py-2';
+        const lbl = document.createElement('span');
+        lbl.className = 'text-xs font-semibold text-slate-700 dark:text-slate-200 truncate';
+        lbl.textContent = tCategory(cat);
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.min = '0';
+        inp.step = '50';
+        inp.placeholder = 'লিমিট নেই';
+        inp.value = Number(categoryBudgets[cat] || 0) > 0 ? String(categoryBudgets[cat]) : '';
+        inp.className = 'w-28 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-bold text-right text-slate-900 dark:text-white focus:outline-none tabular-nums';
+        inp.addEventListener('change', () => {
+          const val = parseFloat(inp.value);
+          if (!Number.isNaN(val) && val > 0) categoryBudgets[cat] = Number(val.toFixed(2));
+          else delete categoryBudgets[cat];
+          saveData();
+          renderCategoryBudgetWarnings();
+          showToast('📊 ' + tCategory(cat) + ' বাজেট আপডেট হয়েছে');
+        });
+        row.appendChild(lbl);
+        row.appendChild(inp);
+        wrap.appendChild(row);
+      });
+    }
+
+    function renderCategoryBudgetWarnings() {
+      const box = document.getElementById('home-cat-budget-warn');
+      const list = document.getElementById('home-cat-budget-warn-list');
+      if (!box || !list) return;
+      const curYm = getTodayDateString().slice(0, 7);
+      const spentByCat = {};
+      expenses.forEach((item) => {
+        if (item.type === 'income') return;
+        if (String(item.date || '').slice(0, 7) !== curYm) return;
+        const c = item.category || 'অন্যান্য';
+        spentByCat[c] = (spentByCat[c] || 0) + Number(item.amount || 0);
+      });
+      const alerts = [];
+      Object.keys(categoryBudgets).forEach((cat) => {
+        const limit = Number(categoryBudgets[cat] || 0);
+        if (limit <= 0) return;
+        const spent = Number(spentByCat[cat] || 0);
+        const pct = Math.round((spent / limit) * 100);
+        if (pct >= 80) {
+          alerts.push({ cat, spent, limit, pct });
+        }
+      });
+      if (!alerts.length) {
+        box.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+      box.classList.remove('hidden');
+      list.innerHTML = '';
+      alerts.forEach((a) => {
+        const pill = document.createElement('span');
+        pill.className = a.pct >= 100
+          ? 'inline-block px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-900/70 text-rose-800 dark:text-rose-200 text-[11px] font-bold tabular-nums'
+          : 'inline-block px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 text-[11px] font-semibold tabular-nums';
+        pill.textContent = tCategory(a.cat) + ': ' + formatCurrency(a.spent, 'home') + ' / ' + formatCurrency(a.limit, 'home') + ' (' + a.pct + '%)';
+        list.appendChild(pill);
+      });
+    }
+
+    // সবগুলো ট্যাবে একসাথে BDT বা SAR সেট করার বাটন
+    const currAllBdtBtn = document.getElementById('curr-select-all-bdt');
+    const currAllSarBtn = document.getElementById('curr-select-all-sar');
+    function setAllTabCurrencies(code) {
+      ['home', 'dues', 'ledger', 'savings', 'assets'].forEach((k) => { tabCurrencies[k] = code; });
+      activeCurrency = code;
+      saveData();
+      render();
+      triggerHaptic(22);
+      showToast(code === 'SAR' ? 'সব ট্যাবে ﷼ রিয়াল চালু হয়েছে' : 'সব ট্যাবে ৳ টাকা চালু হয়েছে');
+    }
+    if (currAllBdtBtn) currAllBdtBtn.addEventListener('click', () => setAllTabCurrencies('BDT'));
+    if (currAllSarBtn) currAllSarBtn.addEventListener('click', () => setAllTabCurrencies('SAR'));
+
+    // ক্যাটাগরি বাজেট ফোল্ডিং সেকশন
+    bindAccordion('toggle-catbudget-section-btn', 'catbudget-section-body', 'catbudget-section-arrow');
+
+    // লাইভ SAR -> BDT এক্সচেঞ্জ রেট ফেচ (open.er-api.com)
+    const convLiveBtn = document.getElementById('converter-live-rate-btn');
+    async function fetchLiveSarRate(silent) {
+      if (convLiveBtn && !silent) {
+        convLiveBtn.disabled = true;
+        convLiveBtn.textContent = '⏳...';
+      }
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/SAR');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const bdt = data && data.rates && Number(data.rates.BDT);
+        if (bdt && bdt > 10) {
+          sarToBdtRate = Number(bdt.toFixed(2));
+          if (converterRateInput) converterRateInput.value = sarToBdtRate.toFixed(2);
+          saveData();
+          render();
+          if (typeof updateConverterFromSar === 'function') updateConverterFromSar();
+          if (!silent) showToast('🔄 লাইভ রেট আপডেট: ১ ﷼ = ৳' + sarToBdtRate.toFixed(2));
+        }
+      } catch (e) {
+        if (!silent) showToast('লাইভ রেট আনা যায়নি (অফলাইন বা নেটওয়ার্ক সমস্যা)');
+      } finally {
+        if (convLiveBtn && !silent) {
+          convLiveBtn.disabled = false;
+          convLiveBtn.textContent = '🔄 লাইভ';
+        }
+      }
+    }
+    if (convLiveBtn) convLiveBtn.addEventListener('click', () => fetchLiveSarRate(false));
+
+    // লাইভ সোনা ও রুপার আন্তর্জাতিক স্পট রেট (প্রতি ভরি = ১১.৬৬৪ গ্রাম)
+    const metalsRefreshBtn = document.getElementById('metals-refresh-btn');
+    const goldBhoriValEl = document.getElementById('gold-bhori-val');
+    const silverBhoriValEl = document.getElementById('silver-bhori-val');
+    const metalsStatusNoteEl = document.getElementById('metals-status-note');
+    if (metalsRefreshBtn) {
+      metalsRefreshBtn.addEventListener('click', async () => {
+        metalsRefreshBtn.disabled = true;
+        metalsRefreshBtn.textContent = '⏳ লোড হচ্ছে...';
+        try {
+          const [usdRes, xauRes, xagRes] = await Promise.all([
+            fetch('https://open.er-api.com/v6/latest/USD'),
+            fetch('https://api.gold-api.com/price/XAU'),
+            fetch('https://api.gold-api.com/price/XAG')
+          ]);
+          const usdData = await usdRes.json();
+          const xauData = await xauRes.json();
+          const xagData = await xagRes.json();
+          const usdToBdt = Number(usdData && usdData.rates && usdData.rates.BDT);
+          const xauUsdOz = Number(xauData && xauData.price);
+          const xagUsdOz = Number(xagData && xagData.price);
+          if (usdToBdt > 0 && xauUsdOz > 0 && xagUsdOz > 0) {
+            const bhoriPerOz = 11.664 / 31.1035;
+            const goldBhori = Math.round(xauUsdOz * bhoriPerOz * usdToBdt);
+            const silverBhori = Math.round(xagUsdOz * bhoriPerOz * usdToBdt);
+            if (goldBhoriValEl) goldBhoriValEl.textContent = '৳' + goldBhori.toLocaleString('en-US');
+            if (silverBhoriValEl) silverBhoriValEl.textContent = '৳' + silverBhori.toLocaleString('en-US');
+            if (metalsStatusNoteEl) metalsStatusNoteEl.textContent = 'আন্তর্জাতিক লাইভ স্পট রেট আপডেট হয়েছে (১ USD = ৳' + usdToBdt.toFixed(2) + ')';
+            triggerHaptic(22);
+          } else {
+            throw new Error('Invalid metal data');
+          }
+        } catch (err) {
+          if (metalsStatusNoteEl) metalsStatusNoteEl.textContent = 'লাইভ রেট লোড করা যায়নি; ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
+        } finally {
+          metalsRefreshBtn.disabled = false;
+          metalsRefreshBtn.textContent = '🔄 লাইভ রেট আনুন';
+        }
+      });
+    }
+
+    // স্মুথ স্ক্রল ফেড-ইন অ্যানিমেশন (IntersectionObserver)
+    if (typeof IntersectionObserver !== 'undefined') {
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add('card-visible');
+            revealObserver.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.05 });
+      document.querySelectorAll('.glass-card').forEach((card) => {
+        card.classList.add('card-reveal');
+        revealObserver.observe(card);
+      });
+    }
+
+    // ১. বায়োমেট্রিক লগইন (WebAuthn Fingerprint / Face ID)
+    const biometricToggleBtn = document.getElementById('biometric-toggle-btn');
+    const biometricStatusText = document.getElementById('biometric-status-text');
+    const pinBiometricUnlockBtn = document.getElementById('pin-biometric-unlock-btn');
+
+    function syncBiometricUI() {
+      const enabled = Boolean(biometricCredId);
+      if (biometricToggleBtn) biometricToggleBtn.textContent = enabled ? 'বন্ধ করুন' : 'চালু করুন';
+      if (biometricStatusText) biometricStatusText.textContent = enabled ? 'বায়োমেট্রিক আনলক সক্রিয় আছে ✓' : 'পিনের পাশাপাশি বায়োমেট্রিক আনলক চালু করুন';
+      if (pinBiometricUnlockBtn) pinBiometricUnlockBtn.classList.toggle('hidden', !enabled);
+    }
+
+    function bufToB64(buf) {
+      return btoa(String.fromCharCode(...new Uint8Array(buf)));
+    }
+    function b64ToBuf(b64) {
+      const bin = atob(b64);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out.buffer;
+    }
+
+    if (biometricToggleBtn) {
+      biometricToggleBtn.addEventListener('click', async () => {
+        if (biometricCredId) {
+          biometricCredId = '';
+          try { localStorage.removeItem(STORAGE_BIOMETRIC_ID_KEY); } catch (e) {}
+          syncBiometricUI();
+          showToast('বায়োমেট্রিক আনলক বন্ধ করা হয়েছে');
+          return;
+        }
+        if (!window.PublicKeyCredential || !navigator.credentials || window.location.protocol !== 'https:') {
+          showToast('বায়োমেট্রিক লগইন লাইভ HTTPS সাইটে (যেমন GitHub Pages) কাজ করবে');
+          return;
+        }
+        try {
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+          const userId = new Uint8Array(16);
+          crypto.getRandomValues(userId);
+          const cred = await navigator.credentials.create({
+            publicKey: {
+              challenge,
+              rp: { name: 'আয়-ব্যয়ের হিসাব' },
+              user: { id: userId, name: 'jahid@aybay', displayName: 'জাহিদ' },
+              pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+              authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+              timeout: 60000
+            }
+          });
+          if (cred && cred.rawId) {
+            biometricCredId = bufToB64(cred.rawId);
+            try { localStorage.setItem(STORAGE_BIOMETRIC_ID_KEY, biometricCredId); } catch (e) {}
+            syncBiometricUI();
+            triggerHaptic(30);
+            showToast('👆 ফিঙ্গারপ্রিন্ট / Face ID চালু হয়েছে!');
+          }
+        } catch (err) {
+          showToast('বায়োমেট্রিক সেটআপ সম্পন্ন হয়নি বা বাতিল হয়েছে');
+        }
+      });
+    }
+
+    if (pinBiometricUnlockBtn) {
+      pinBiometricUnlockBtn.addEventListener('click', async () => {
+        if (!biometricCredId || !navigator.credentials) return;
+        try {
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+          const assertion = await navigator.credentials.get({
+            publicKey: {
+              challenge,
+              allowCredentials: [{ id: b64ToBuf(biometricCredId), type: 'public-key' }],
+              userVerification: 'required',
+              timeout: 60000
+            }
+          });
+          if (assertion) {
+            triggerHaptic(25);
+            setVaultContentHidden(false);
+            pinLockScreenEl.classList.add('hidden');
+            pinUnlockInput.value = '';
+            updatePinDots();
+            resetIdleLockTimer();
+          }
+        } catch (e) {
+          showToast('বায়োমেট্রিক যাচাই ব্যর্থ হয়েছে, পিন দিন');
+        }
+      });
+    }
+    syncBiometricUI();
+
+    // ৩. স্টিলথ / ফোন ঝাঁকালে প্রাইভেসি মোড (Shake-to-Hide)
+    const stealthCheck = document.getElementById('stealth-mode-check');
+    if (stealthCheck) {
+      stealthCheck.checked = stealthModeEnabled;
+      stealthCheck.addEventListener('change', () => {
+        stealthModeEnabled = Boolean(stealthCheck.checked);
+        try { localStorage.setItem(STORAGE_STEALTH_KEY, stealthModeEnabled ? '1' : '0'); } catch (e) {}
+        showToast(stealthModeEnabled ? '🕶️ Stealth প্রাইভেসি মোড চালু হয়েছে' : 'Stealth মোড বন্ধ করা হয়েছে');
+      });
+    }
+    let lastShakeAt = 0;
+    window.addEventListener('devicemotion', (ev) => {
+      if (!stealthModeEnabled) return;
+      const acc = ev.accelerationIncludingGravity;
+      if (!acc) return;
+      const mag = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+      if (mag > 23 && Date.now() - lastShakeAt > 1500) {
+        lastShakeAt = Date.now();
+        hideBalances = !hideBalances;
+        triggerHaptic(30);
+        render();
+        showToast(hideBalances ? '🕶️ টাকার পরিমাণ লুকানো হয়েছে' : '👁️ টাকার পরিমাণ দেখানো হচ্ছে');
+      }
+    });
+
+    // ২. স্মার্ট রিসিট OCR স্ক্যানার (Lazy-loaded Tesseract.js)
+    const receiptOcrBtn = document.getElementById('receipt-ocr-btn');
+    if (receiptOcrBtn) {
+      receiptOcrBtn.addEventListener('click', async () => {
+        if (!pendingReceiptDataUrl) {
+          showToast('প্রথমে একটি রিসিটের ছবি যুক্ত করুন');
+          return;
+        }
+        receiptOcrBtn.disabled = true;
+        receiptOcrBtn.textContent = '⏳...';
+        try {
+          if (typeof window.Tesseract === 'undefined') {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+              s.onload = resolve;
+              s.onerror = reject;
+              document.head.appendChild(s);
+            });
+          }
+          const result = await window.Tesseract.recognize(pendingReceiptDataUrl, 'eng');
+          const txt = String(result && result.data && result.data.text ? result.data.text : '');
+          const lower = txt.toLowerCase();
+
+          // মোট টাকা বের করা
+          let foundAmt = 0;
+          const totalMatch = txt.match(/(?:total|grand|amount|net|payable|bill)[^\d]{0,14}(\d[\d,]*(?:\.\d{1,2})?)/i);
+          if (totalMatch) {
+            foundAmt = parseFloat(totalMatch[1].replace(/,/g, ''));
+          } else {
+            const nums = (txt.match(/\d[\d,]*\.\d{2}/g) || []).map((n) => parseFloat(n.replace(/,/g, ''))).filter((n) => !Number.isNaN(n) && n > 0 && n < 10000000);
+            if (nums.length) foundAmt = Math.max(...nums);
+          }
+          if (foundAmt > 0 && amountInput) amountInput.value = String(foundAmt);
+
+          // তারিখ বের করা
+          const dateIso = txt.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+          const dateDmy = txt.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+          if (dateIso && dateInput) {
+            dateInput.value = dateIso[1] + '-' + String(dateIso[2]).padStart(2, '0') + '-' + String(dateIso[3]).padStart(2, '0');
+          } else if (dateDmy && dateInput) {
+            dateInput.value = dateDmy[3] + '-' + String(dateDmy[2]).padStart(2, '0') + '-' + String(dateDmy[1]).padStart(2, '0');
+          }
+
+          // ক্যাটাগরি অনুমান
+          if (categoryInput) {
+            if (/food|restaurant|cafe|burger|pizza|tea|coffee|bakery|hotel/.test(lower)) categoryInput.value = 'খাবার';
+            else if (/uber|pathao|bus|fuel|petrol|taxi|ride|transport/.test(lower)) categoryInput.value = 'যাতায়াত';
+            else if (/electric|wifi|internet|water|gas|utility|bill/.test(lower)) categoryInput.value = 'বিল';
+            else if (/mart|shop|store|super|mall|cloth|pharmacy/.test(lower)) categoryInput.value = 'কেনাকাটা';
+          }
+          if (nameInput && !nameInput.value.trim()) {
+            const firstLine = txt.split('\n').map((l) => l.trim()).find((l) => l.length >= 3 && !/^\d+$/.test(l));
+            if (firstLine) nameInput.value = firstLine.slice(0, 35);
+          }
+          triggerHaptic(30);
+          showToast(foundAmt > 0 ? '✨ রিসিট স্ক্যান সম্পন্ন! পরিমাণ: ' + foundAmt : '✨ রিসিট পড়া হয়েছে, তথ্য মিলিয়ে নিন');
+        } catch (err) {
+          showToast('রিসিট স্ক্যান করতে ইন্টারনেট সংযোগ প্রয়োজন');
+        } finally {
+          receiptOcrBtn.disabled = false;
+          receiptOcrBtn.textContent = '✨ স্ক্যান';
+        }
+      });
+    }
+
+    // ৫. একাধিক সঞ্চয় লক্ষ্য (Sinking Funds)
+    bindAccordion('toggle-sinking-funds-btn', 'sinking-funds-body', 'sinking-funds-arrow');
+    const sfForm = document.getElementById('sinking-fund-form');
+    const sfNameIn = document.getElementById('sf-name-input');
+    const sfTargetIn = document.getElementById('sf-target-input');
+
+    function renderSinkingFunds() {
+      const list = document.getElementById('sinking-funds-list');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!sinkingFunds.length) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-slate-400 dark:text-slate-500 text-center py-2';
+        empty.textContent = 'কোনো আলাদা লক্ষ্য যোগ করা হয়নি (যেমন: নতুন ফোন, ভ্রমণ)।';
+        list.appendChild(empty);
+        return;
+      }
+      sinkingFunds.forEach((g) => {
+        const saved = Number(g.saved || 0);
+        const target = Math.max(1, Number(g.target || 1));
+        const pct = Math.min(100, Math.round((saved / target) * 100));
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/70 space-y-2';
+
+        const head = document.createElement('div');
+        head.className = 'flex items-center justify-between gap-2';
+        const nm = document.createElement('p');
+        nm.className = 'text-xs font-bold text-slate-800 dark:text-slate-100 truncate';
+        nm.textContent = '🎯 ' + g.name + (pct >= 100 ? ' ✅' : '');
+        const pctEl = document.createElement('span');
+        pctEl.className = 'text-xs font-extrabold accent-text tabular-nums shrink-0';
+        pctEl.textContent = pct + '%';
+        head.appendChild(nm);
+        head.appendChild(pctEl);
+
+        const barWrap = document.createElement('div');
+        barWrap.className = 'w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden';
+        const barFill = document.createElement('div');
+        barFill.className = 'h-full rounded-full transition-all duration-300';
+        barFill.style.width = pct + '%';
+        barFill.style.backgroundColor = 'var(--accent)';
+        barWrap.appendChild(barFill);
+
+        const foot = document.createElement('div');
+        foot.className = 'flex flex-wrap items-center justify-between gap-2';
+        const amtTxt = document.createElement('span');
+        amtTxt.className = 'text-[11px] font-semibold text-slate-600 dark:text-slate-300 tabular-nums';
+        amtTxt.textContent = formatCurrency(saved, 'savings') + ' / ' + formatCurrency(target, 'savings');
+
+        const act = document.createElement('div');
+        act.className = 'flex items-center gap-1.5';
+        const addIn = document.createElement('input');
+        addIn.type = 'number';
+        addIn.min = '1';
+        addIn.step = '100';
+        addIn.placeholder = '+ জমা';
+        addIn.className = 'w-20 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-[11px] text-slate-900 dark:text-white focus:outline-none';
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'px-2.5 py-1 rounded-lg accent-bg text-white text-[11px] font-bold cursor-pointer';
+        addBtn.textContent = '+';
+        addBtn.addEventListener('click', () => {
+          const val = parseFloat(addIn.value);
+          if (Number.isNaN(val) || val <= 0) return;
+          sinkingFunds = sinkingFunds.map((x) => x.id === g.id ? { ...x, saved: Number((Number(x.saved || 0) + val).toFixed(2)) } : x);
+          saveData();
+          renderSinkingFunds();
+          triggerHaptic(25);
+          showToast('🎯 "' + g.name + '"-এ জমা হয়েছে!');
+        });
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-[11px] font-bold cursor-pointer';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', () => {
+          sinkingFunds = sinkingFunds.filter((x) => x.id !== g.id);
+          saveData();
+          renderSinkingFunds();
+          showToast(t('toastDeleted'));
+        });
+        act.appendChild(addIn);
+        act.appendChild(addBtn);
+        act.appendChild(delBtn);
+
+        foot.appendChild(amtTxt);
+        foot.appendChild(act);
+        card.appendChild(head);
+        card.appendChild(barWrap);
+        card.appendChild(foot);
+        list.appendChild(card);
+      });
+    }
+
+    if (sfForm) {
+      sfForm.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const nm = sfNameIn ? sfNameIn.value.trim() : '';
+        const tgt = sfTargetIn ? parseFloat(sfTargetIn.value) : 0;
+        if (!nm || Number.isNaN(tgt) || tgt <= 0) return;
+        sinkingFunds.unshift({ id: Date.now(), name: nm, target: tgt, saved: 0 });
+        sfForm.reset();
+        saveData();
+        renderSinkingFunds();
+        triggerHaptic(25);
+        showToast('🏆 নতুন সঞ্চয় লক্ষ্য যোগ হয়েছে!');
+      });
+    }
+
+    // ৬. ঋণ পরিশোধ পরিকল্পনা (Debt Payoff Planner)
+    bindAccordion('toggle-debt-planner-btn', 'debt-planner-body', 'debt-planner-arrow');
+    const debtBudgetIn = document.getElementById('debt-monthly-budget-input');
+    const debtStrategySel = document.getElementById('debt-strategy-select');
+
+    function renderDebtPlanner() {
+      const out = document.getElementById('debt-planner-output');
+      if (!out) return;
+      const defaultProfileId = dueProfiles[0].id;
+      const unpaidPayables = dues
+        .filter((d) => !d.paid && d.type === 'payable' && (d.profileId || defaultProfileId) === activeDueProfileId)
+        .map((d) => ({ person: d.person, rem: getDueRemaining(d) }))
+        .filter((d) => d.rem > 0);
+      out.innerHTML = '';
+      if (!unpaidPayables.length) {
+        const p = document.createElement('p');
+        p.className = 'text-emerald-600 dark:text-emerald-400 font-semibold';
+        p.textContent = '🎉 অভিনন্দন! এই প্রোফাইলে কোনো অপরিশোধিত দেনা নেই।';
+        out.appendChild(p);
+        return;
+      }
+      const strategy = debtStrategySel ? debtStrategySel.value : 'snowball';
+      const sorted = [...unpaidPayables].sort((a, b) => strategy === 'snowball' ? (a.rem - b.rem) : (b.rem - a.rem));
+      const budget = Math.max(1, parseFloat(debtBudgetIn && debtBudgetIn.value) || 5000);
+      const totalDebt = sorted.reduce((s, d) => s + d.rem, 0);
+      const totalMonths = Math.ceil(totalDebt / budget);
+
+      const sumLine = document.createElement('p');
+      sumLine.className = 'font-bold accent-text pb-1';
+      sumLine.textContent = 'মোট দেনা: ' + formatCurrency(totalDebt, 'dues') + ' • আনুমানিক সময়: ~' + totalMonths + ' মাস (প্রতি মাসে ' + formatCurrency(budget, 'dues') + ')';
+      out.appendChild(sumLine);
+
+      let cum = 0;
+      sorted.forEach((d, idx) => {
+        cum += d.rem;
+        const mEnd = Math.ceil(cum / budget);
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/70';
+        const left = document.createElement('span');
+        left.className = 'font-semibold truncate';
+        left.textContent = (idx + 1) + '. ' + d.person + ' — ' + formatCurrency(d.rem, 'dues');
+        const right = document.createElement('span');
+        right.className = 'text-[11px] font-bold text-rose-600 dark:text-rose-400 shrink-0';
+        right.textContent = 'মাস ' + mEnd + '-এ শেষ';
+        row.appendChild(left);
+        row.appendChild(right);
+        out.appendChild(row);
+      });
+    }
+    if (debtBudgetIn) debtBudgetIn.addEventListener('input', renderDebtPlanner);
+    if (debtStrategySel) debtStrategySel.addEventListener('change', renderDebtPlanner);
+
+    // ৭. কাস্টম মাসিক ফিন্যান্স রিপোর্ট কার্ড (Canvas PNG + Share)
+    const shareReportBtn = document.getElementById('share-report-card-btn');
+    const reportCardModal = document.getElementById('report-card-modal');
+    const reportCardCloseBtn = document.getElementById('report-card-close-btn');
+    const reportCardCanvas = document.getElementById('report-card-canvas');
+    const reportCardShareBtn = document.getElementById('report-card-share-btn');
+    const reportCardDownloadBtn = document.getElementById('report-card-download-btn');
+
+    function drawReportCardCanvas() {
+      if (!reportCardCanvas) return;
+      const ctx = reportCardCanvas.getContext('2d');
+      if (!ctx) return;
+      const entries = getMonthFilteredEntries();
+      const inc = entries.filter((i) => i.type === 'income').reduce((s, i) => s + Number(i.amount || 0), 0);
+      const exp = entries.filter((i) => i.type !== 'income').reduce((s, i) => s + Number(i.amount || 0), 0);
+      const net = inc - exp;
+      const sav = getNetSavingsTotal();
+      const period = selectedMonth === 'all' ? 'সকল মাসের সারসংক্ষেপ' : formatMonthLabel(selectedMonth);
+
+      const grad = ctx.createLinearGradient(0, 0, 900, 560);
+      grad.addColorStop(0, '#064e3b');
+      grad.addColorStop(0.55, '#0f172a');
+      grad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 900, 560);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath(); ctx.arc(800, 90, 140, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(100, 490, 120, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText('আয়-ব্যয়ের হিসাব • ফিন্যান্স রিপোর্ট', 48, 68);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = '20px sans-serif';
+      ctx.fillText(period + '  |  তারিখ: ' + getTodayDateString(), 48, 102);
+
+      const boxes = [
+        { label: 'মোট আয় (+)', val: formatCurrency(inc, 'home'), color: '#34d399', x: 48, y: 150 },
+        { label: 'মোট খরচ (−)', val: formatCurrency(exp, 'home'), color: '#fb7185', x: 468, y: 150 },
+        { label: 'নিট ব্যালেন্স', val: formatCurrency(net, 'home'), color: '#38bdf8', x: 48, y: 300 },
+        { label: 'মোট সঞ্চয়', val: formatCurrency(sav, 'savings'), color: '#fbbf24', x: 468, y: 300 }
+      ];
+      boxes.forEach((b) => {
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        ctx.fillRect(b.x, b.y, 384, 120);
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(b.x, b.y, 384, 120);
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        ctx.font = '20px sans-serif';
+        ctx.fillText(b.label, b.x + 24, b.y + 42);
+        ctx.fillStyle = b.color;
+        ctx.font = 'bold 34px sans-serif';
+        ctx.fillText(b.val, b.x + 24, b.y + 92);
+      });
+
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '18px sans-serif';
+      ctx.fillText('Powered by জাহিদ', 48, 515);
+    }
+
+    if (shareReportBtn && reportCardModal) {
+      shareReportBtn.addEventListener('click', () => {
+        drawReportCardCanvas();
+        reportCardModal.classList.remove('hidden');
+        triggerHaptic(22);
+      });
+    }
+    if (reportCardCloseBtn && reportCardModal) {
+      reportCardCloseBtn.addEventListener('click', () => reportCardModal.classList.add('hidden'));
+      reportCardModal.addEventListener('click', (ev) => {
+        if (ev.target === reportCardModal) reportCardModal.classList.add('hidden');
+      });
+    }
+    if (reportCardDownloadBtn && reportCardCanvas) {
+      reportCardDownloadBtn.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = reportCardCanvas.toDataURL('image/png');
+        a.download = 'ay-bay-report-' + getTodayDateString() + '.png';
+        a.click();
+        showToast('⬇️ রিপোর্ট কার্ড ডাউনলোড হয়েছে!');
+      });
+    }
+    if (reportCardShareBtn && reportCardCanvas) {
+      reportCardShareBtn.addEventListener('click', () => {
+        reportCardCanvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const file = new File([blob], 'ay-bay-report.png', { type: 'image/png' });
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'আয়-ব্যয়ের হিসাব রিপোর্ট' });
+              return;
+            } catch (e) {}
+          }
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'ay-bay-report-' + getTodayDateString() + '.png';
+          a.click();
+          showToast('ছবি ডাউনলোড হয়েছে—এখন WhatsApp/Facebook-এ শেয়ার করুন');
+        }, 'image/png');
+      });
+    }
+
+    // ১০. ড্যাশবোর্ড লাইভ রেট উইজেট রিফ্রেশ (রিয়াল + ডলার + সোনা/ভরি)
+    const widgetRefreshBtn = document.getElementById('widget-rates-refresh-btn');
+    if (widgetRefreshBtn) {
+      widgetRefreshBtn.addEventListener('click', async () => {
+        widgetRefreshBtn.disabled = true;
+        widgetRefreshBtn.textContent = '⏳...';
+        try {
+          const [sarRes, usdRes, xauRes] = await Promise.all([
+            fetch('https://open.er-api.com/v6/latest/SAR'),
+            fetch('https://open.er-api.com/v6/latest/USD'),
+            fetch('https://api.gold-api.com/price/XAU')
+          ]);
+          const sarData = await sarRes.json();
+          const usdData = await usdRes.json();
+          const xauData = await xauRes.json();
+          const sarBdt = Number(sarData && sarData.rates && sarData.rates.BDT);
+          const usdBdt = Number(usdData && usdData.rates && usdData.rates.BDT);
+          const xauUsd = Number(xauData && xauData.price);
+          if (sarBdt > 0) {
+            sarToBdtRate = Number(sarBdt.toFixed(2));
+            if (converterRateInput) converterRateInput.value = sarToBdtRate.toFixed(2);
+            const wSar = document.getElementById('widget-sar-val');
+            if (wSar) wSar.textContent = '৳' + sarToBdtRate.toFixed(2);
+            saveData();
+          }
+          if (usdBdt > 0) {
+            const wUsd = document.getElementById('widget-usd-val');
+            if (wUsd) wUsd.textContent = '৳' + usdBdt.toFixed(2);
+          }
+          if (usdBdt > 0 && xauUsd > 0) {
+            const goldBhori = Math.round(xauUsd * (11.664 / 31.1035) * usdBdt);
+            const wGold = document.getElementById('widget-gold-val');
+            if (wGold) wGold.textContent = '৳' + goldBhori.toLocaleString('en-US') + '/ভরি';
+          }
+          render();
+          triggerHaptic(22);
+          showToast('📡 লাইভ রেট আপডেট হয়েছে!');
+        } catch (err) {
+          showToast('লাইভ রেট লোড করা যায়নি (ইন্টারনেট চেক করুন)');
+        } finally {
+          widgetRefreshBtn.disabled = false;
+          widgetRefreshBtn.textContent = '🔄 আপডেট';
+        }
+      });
+    }
+
+    processRecurringTransactions();
     render();
+    window.addEventListener('load', () => {
+      if (typeof Chart !== 'undefined') {
+        try { render(); } catch (e) {}
+      }
+    });
     if (appPin) {
       showLockScreen();
+      resetIdleLockTimer();
+    } else {
+      document.documentElement.classList.remove('pin-prelocked');
     }
+
+    // ম্যানিফেস্ট শর্টকাট হ্যান্ডলার (হোমস্ক্রিন আইকনে লং-প্রেস করলে সরাসরি অ্যাকশন)
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const act = sp.get('action');
+      if (act === 'add_expense') {
+        const body = document.getElementById('home-add-body');
+        const tb = document.getElementById('toggle-add-card-btn');
+        if (body && body.classList.contains('hidden')) {
+          body.classList.remove('hidden');
+          if (tb) { tb.textContent = '▾'; tb.setAttribute('aria-expanded', 'true'); }
+        }
+        setTimeout(() => { if (nameInput) nameInput.focus(); }, 180);
+      } else if (act === 'dues') {
+        if (typeof switchTab === 'function') switchTab('dues');
+      } else if (act === 'report') {
+        if (typeof drawReportCardCanvas === 'function' && reportCardModal) {
+          drawReportCardCanvas();
+          reportCardModal.classList.remove('hidden');
+        }
+      }
+    } catch (e) {}
   </script>
+  <!-- PWA নতুন আপডেট ব্যানার -->
+  <div id="pwa-update-banner" class="hidden fixed top-4 inset-x-4 z-[80] max-w-md mx-auto bg-slate-900 text-white rounded-2xl px-4 py-3 shadow-2xl border border-emerald-400/40 flex items-center justify-between gap-3">
+    <span class="text-xs font-semibold">✨ অ্যাপের নতুন আপডেট এসেছে!</span>
+    <button id="pwa-update-reload-btn" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold cursor-pointer shrink-0">আপডেট করুন</button>
+  </div>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                const banner = document.getElementById('pwa-update-banner');
+                const btn = document.getElementById('pwa-update-reload-btn');
+                if (banner) banner.classList.remove('hidden');
+                if (btn) {
+                  btn.onclick = () => {
+                    nw.postMessage({ action: 'skipWaiting' });
+                    window.location.reload();
+                  };
+                }
+              }
+            });
+          });
+        }).catch(() => {});
       });
     }
   </script>
